@@ -3,15 +3,7 @@
     import { ref } from 'vue';
     let name = ref<string|null>(null);
     
-    const getCounter = () => {
-    axios.get('http://localhost:5053/counter')
-      .then(response => {
-        const data = response.data;
-      })
-      .catch(error => {
-        console.error(error);
-      });
-  }
+   
   const creaCounter = () => {
     axios.post('http://localhost:5053/counter/', { input: name })
       .then(response => {
@@ -21,16 +13,7 @@
         console.error(error);
       });
   }
-  const urlGetAll = 'http://localhost:5053/counter/' + name.value;
-  const getCounterAll = () => {
-    axios.get(urlGetAll)
-      .then(response => {
-        const data = response.data;
-      })
-      .catch(error => {
-        console.error(error);
-      });
-  }
+  
 
 
 
