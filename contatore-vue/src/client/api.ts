@@ -28,11 +28,6 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError } from './base';
  * @export
  * @interface CounterDto
  */
-
-static getCountersClient(): CountersApiInterface {
-return CountersApiFactory(new Configuration(this.getDefaultParams()));
-}
-
 export interface CounterDto {
     /**
      * 

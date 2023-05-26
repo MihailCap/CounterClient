@@ -1,12 +1,12 @@
 <script setup lang="ts">
 
-import MihCounter from './MihCounter.vue';
-import { ref } from "vue";
+import CounterIndex from './CounterIndex.vue';
+
 </script>
 
 <template>
 
-    <MihCounter />
+    <CounterIndex></CounterIndex>
 
 </template>
 
