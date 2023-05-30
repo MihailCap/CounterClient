@@ -1,127 +1,216 @@
-<script lang="ts" setup>
-import { ref, watch } from 'vue';
+
+    <script lang="ts" setup>
+import { onMounted, ref, watch } from 'vue';
 import CounterButton from './CounterButton.vue';
+import type { CounterDto } from './client';
+import { CounterService } from './service/CounterService';
 
+const emit = defineEmits(['changed'])
 
+const counterService = new CounterService();
 
-const valore = ref(0);
-let min = ref<number|null>(null);
-let max = ref<number|null>(null);
-let num = ref<number|null>(null);
-watch(max, (maxV )=>{
-    if(maxV != null && maxV < valore.value){
-        if(min.value != null) {
-            if(max.value != null && max.value > min.value){
-                valore.value = maxV;
-            }
-        }else{
-            valore.value = maxV;
-        }
-    }
+const props = defineProps<{
+    counter: CounterDto | null | undefined,
+}>();
+
+const min = ref<number|null>();
+const max = ref<number|null>();
+const step = ref<number|null>();
+const newName = ref<string|null>()
+
+onMounted(() => {
+    min.value = props.counter?.min;
+    max.value = props.counter?.max;
+    step.value = props.counter?.step;
 })
 
-watch(min, (minV )=>{
-    if(minV != null && minV > valore.value){
-        valore.value = minV;
-    }
+watch(()=>props.counter,()=>{
+    min.value = props.counter?.min;
+    max.value = props.counter?.max;
+    step.value = props.counter?.step;
 })
 
-const incrementa = () => {
-    if(valore.value < (max.value ?? Number.MAX_SAFE_INTEGER)){
-        num.value!=null && num.value != 0 ? valore.value += num.value : valore.value++;
+
+const setMin = async () =>{
+    if(props.counter != null){
+        await counterService.update(props.counter!.name!, {
+            name: props.counter?.name,
+            min: min.value,
+            max: props.counter?.max,
+            step: props.counter?.step,
+            value: props.counter?.value,
+        } as CounterDto);
+        emit('changed');
     }
 }
 
-const decrementa = () => {
-    if(valore.value > (min.value ?? Number.MIN_SAFE_INTEGER)){
-        num.value != null && num.value != 0? valore.value -= num.value : valore.value--;
+const setMax = async () =>{
+    if(props.counter != null){
+       await counterService.update(props.counter!.name!, {
+            name: props.counter?.name,
+            min: props.counter?.min,
+            max: max.value,
+            step: props.counter?.step,
+            value: props.counter?.value,
+        } as CounterDto);
+        emit('changed');
+    }
+}
+const setStep = async () =>{
+    if(props.counter != null){
+       await counterService.update(props.counter!.name!, {
+            name: props.counter?.name,
+            min: props.counter?.min,
+            max: props.counter?.max,
+            step: step.value,
+            value: props.counter?.value,
+        } as CounterDto);
+        emit('changed');
     }
 }
 
-const reset = () => {
-    valore.value=0;
-    min.value = null;
-    max.value = null;
+const setNewName = async () =>{
+    if(props.counter != null){
+       await counterService.update(props.counter!.name!, {
+            name: newName.value,
+            min: props.counter?.min,
+            max: props.counter?.max,
+            step: props.counter?.step,
+            value: props.counter?.value,
+        } as CounterDto);
+        emit('changed');
+    }
+}
+
+const incrementa = async () => {
+    if(props.counter != null){
+        await counterService.increment(props.counter!.name!);
+        emit('changed');
+    }
+}
+
+const decrementa = async () => {
+    if(props.counter != null){
+        await counterService.decrement(props.counter!.name!);
+        emit('changed');
+    }
+}
+
+const reset = async () => {
+    if(props.counter != null){
+        await counterService.reset(props.counter!.name!);
+        emit('changed');
+    }
+}
+
+const remove = async () => {
+    if(props.counter != null){
+        await counterService.remove(props.counter!.name!);
+        emit('changed');
+    }
 }
 </script>
 
-<template>
-    <span>Contatore</span>
-    <br>
-    <br>
-    <br>
-    <br>
+<template>  
+    <div v-if="counter!=null" id="divMain">
+    <h2>{{ counter.name }}</h2>
     <div id="Cont">
-        <label for="num">inserire di quanti numeri incrementare il contatore</label>
+        <div id="labels">
+        <label for="min">min</label>
+        <label for="max">max</label>
+        <label for="num">step</label>
+        </div>
         <br>
-        <input type="number" v-model="num">
+        <div class="inputs">
+        <input type="number" id="min" v-model="min" @blur="setMin">
+        <input type="number" id="max" v-model="max" @blur="setMax">
+        <input type="number" v-model="step"  @blur="setStep" id="step">
+        </div>
         <br>
         <br>
-        {{ valore }}
+        <div style="font-size:40px; color:black">
+        {{ counter.value }}
+        </div>
         <br>
-        <label for="min">min </label>
-        <input type="number" v-model="min">
-        &nbsp;
-        <input type="number" v-model="max">
-        <label for="max"> max</label>
+        <div class="inputs">
+        <CounterButton @click="decrementa"  class="bottone">-</CounterButton>
+        <CounterButton @click="incrementa"  class="bottone">+</CounterButton>
+        <CounterButton @click="reset" class="bottone">reset</CounterButton>
+        <CounterButton @click="remove" class="bottone">delete</CounterButton>
+        </div>
         <br>
+        <label for="text">change counter name: </label>
         <br>
-        <CounterButton @click="decrementa" id="btnMeno" class="bottone"  :disabled="!(min == null) && valore <= min">-</CounterButton>
-        &nbsp;
-        <CounterButton @click="reset" id="btnReset" class="bottone" >reset</CounterButton>
-        &nbsp;
-        <CounterButton @click="incrementa" id="btnPiù" class="bottone"  :disabled="!(max == null) && valore >= max">+</CounterButton>
-       
-        
+        <input type="text" v-model="newName" @blur="setNewName">
+        </div>
     </div>
 </template>
 
+
 <style scoped>
-    input{
-        text-align: center;
-    }
-    div{
-        align-items: center;
-        text-align: center;
-        color: cadetblue;
-        font-size: 25px;
-        margin:auto;
-        width:200%;
-        border: 3px solid white;
-        padding:10%;
-        margin-bottom: 70px;
-        border-radius: 10px;
-    }
-    span{
-        margin-left:90%;
-        
-        font-size: 30px;
+input {
+    text-align: center;
+    width: 150px;
+    display: inline-block;
     
-    }
-    #btnPiù{
-        background-color: green;
-    }
+}
 
-    #btnPiù:disabled, #btnMeno:disabled{
-        background-color: grey;
-    }
 
-    #btnMeno{
-        background-color: red;
-        
-    }
-    #btnReset{
-        background-color: ghostwhite;
-        font-size: 30px;
-    }
+div {
+    text-align: center;
+    color: darkslategray;
+    font-size: 25px;
+    
+}
 
-    label{
-        color:darkcyan;
-    }
-    #Cont{
-        background-color:rgb(59, 59, 59);
-    }
-    .bottone{
-        border:none;
-    }
+.inputs{
+    display: flex;
+    justify-content: space-between;
+}
+
+#labels{
+    display: flex;
+    justify-content: space-between;
+    margin:1%;
+}
+
+#btnPiù:disabled,
+#btnMeno:disabled {
+    background-color: grey;
+}
+
+
+label {
+    color:darkolivegreen;
+    display: inline;
+    width: 150px;
+    text-align: center;
+}
+
+#divMain{
+    background-color:whitesmoke
+}
+
+
+#Cont {
+    background-color: lightgray;
+    border-top: 2px solid black;
+    padding: 10%;
+}
+
+.bottone {
+    margin: 10px;
+    width: 160px;
+    background-color: ghostwhite;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.bottone:hover{
+    background-color: azure;
+}
+
 </style>
